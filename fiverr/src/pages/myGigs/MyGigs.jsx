@@ -1,18 +1,42 @@
 import React from 'react';
 import { Link } from "react-router-dom";
+import getCurrentUser from '../../utils/getCurrentUser';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import newRequest from "../../utils/newRequest";
 
 function MyGigs() {
-  const currentUser = {
-    id: 1,
-    username: "Anna",
-    isSeller: true,
+  const currentUser = getCurrentUser();
+
+  const queryClient = useQueryClient();
+
+  const { isLoading, error , data } = useQuery({
+    queryKey: ["myGigs"],
+    queryFn: () =>
+      newRequest.get(`/gigs?userId=${currentUser.id}`).then((res) => {
+        return res.data;
+      }),
+  });
+
+  const mutation = useMutation({
+    mutationFn: (id) => {
+      return newRequest.delete(`/gigs/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["myGigs"]);
+    },
+  });
+
+  const handleDelete = (id) => {
+    mutation.mutate(id);
   };
+
 
   return (
     <div className="flex justify-center text-[#555] myGigs">
+      {isLoading ? "loading" : error ? "error" :
       <div className="w-[1400px] py-[50px] container">
         <div className="flex justify-between title">
-          <h1 className="text-[30px] font-bold">{currentUser.isSeller ? "Gigs" : "Orders"}</h1>
+          <h1 className="text-[30px] font-bold">Gigs</h1>
           {currentUser.isSeller && (
             <Link to="/add">
               <button className="bg-[#1dbf73] text-white font-medium border-none p-[10px] cursor-pointer">Add New Gig</button>
@@ -20,105 +44,36 @@ function MyGigs() {
           )}
         </div>
         <table className="w-full">
-          <tr className="h-[50px] even:bg-[#1dbf730f]">
-            <th className="text-left">Image</th>
-            <th className="text-left">Title</th>
-            <th className="text-left">Price</th>
-            <th className="text-left">Sales</th>
-            <th className="text-left">Action</th>
-          </tr>
-          <tr className="h-[50px] even:bg-[#1dbf730f]">
-            <td>
-              <img
-                className="w-[50px] h-[25px] object-cover image"
-                src="https://images.pexels.com/photos/270408/pexels-photo-270408.jpeg?auto=compress&cs=tinysrgb&w=1600"
-                alt=""
-              />
-            </td>
-            <td>Stunning concept art</td>
-            <td>59.<sup>99</sup></td>
-            <td>13</td>
-            <td>
-              <img className="w-[20px] cursor-pointer delete" src="./img/delete.png" alt="" />
-            </td>
-          </tr>
-          <tr className="h-[50px] even:bg-[#1dbf730f]" >
-            <td>
-              <img
-                className="w-[50px] h-[25px] object-cover image"
-                src="https://images.pexels.com/photos/270408/pexels-photo-270408.jpeg?auto=compress&cs=tinysrgb&w=1600"
-                alt=""
-              />
-            </td>
-            <td>Ai generated concept art</td>
-            <td>120.<sup>99</sup></td>
-            <td>41</td>
-            <td>
-              <img className="w-[20px] cursor-pointer delete" src="./img/delete.png" alt="" />
-            </td>
-          </tr>
-          <tr className="h-[50px] even:bg-[#1dbf730f]">
-            <td>
-              <img
-                className="w-[50px] h-[25px] object-cover image"
-                src="https://images.pexels.com/photos/270408/pexels-photo-270408.jpeg?auto=compress&cs=tinysrgb&w=1600"
-                alt=""
-              />
-            </td>
-            <td>High quality digital character</td>
-            <td>79.<sup>99</sup></td>
-            <td>55</td>
-            <td>
-              <img className="w-[20px] cursor-pointer delete" src="./img/delete.png" alt="" />
-            </td>
-          </tr>
-          <tr className="h-[50px] even:bg-[#1dbf730f]">
-            <td>
-              <img
-                className="w-[50px] h-[25px] object-cover image"
-                src="https://images.pexels.com/photos/270408/pexels-photo-270408.jpeg?auto=compress&cs=tinysrgb&w=1600"
-                alt=""
-              />
-            </td>
-            <td>Illustration hyper realistic painting</td>
-            <td>119.<sup>99</sup></td>
-            <td>29</td>
-            <td>
-              <img className="w-[20px] cursor-pointer delete" src="./img/delete.png" alt="" />
-            </td>
-          </tr>
-          <tr className="h-[50px] even:bg-[#1dbf730f]">
-            <td>
-              <img
-                className="w-[50px] h-[25px] object-cover image"
-                src="https://images.pexels.com/photos/270408/pexels-photo-270408.jpeg?auto=compress&cs=tinysrgb&w=1600"
-                alt=""
-              />
-            </td>
-            <td>Original ai generated digital art</td>
-            <td>59.<sup>99</sup></td>
-            <td>34</td>
-            <td>
-              <img className="w-[20px] cursor-pointer delete" src="./img/delete.png" alt="" />
-            </td>
-          </tr>
-          <tr className="h-[50px] even:bg-[#1dbf730f]">
-                <td>
+            <thead>
+                <tr className="h-[50px] even:bg-[#1dbf730f]">
+                    <th className="text-left">Image</th>
+                    <th className="text-left">Title</th>
+                    <th className="text-left">Price</th>
+                    <th className="text-left">Sales</th>
+                    <th className="text-left">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {data.map((gig) => (
+                <tr className="h-[50px] even:bg-[#1dbf730f]" key={gig._id}>
+                    <td>
                     <img
                         className="w-[50px] h-[25px] object-cover image"
-                        src="https://images.pexels.com/photos/270408/pexels-photo-270408.jpeg?auto=compress&cs=tinysrgb&w=1600"
+                        src={gig.cover}
                         alt=""
                     />
-                </td>
-                <td>Text based ai generated art</td>
-                <td>110.<sup>99</sup></td>
-                <td>16</td>
-                <td>
-                    <img className="w-[20px] cursor-pointer delete" src="./img/delete.png" alt="" />
-                </td>
-          </tr>
+                    </td>
+                    <td>{gig.title}</td>
+                    <td>{gig.price}</td>
+                    <td>{gig.sales}</td>
+                    <td>
+                    <img className="w-[20px] cursor-pointer delete" src="./img/delete.png" alt="" onClick={() => handleDelete(gig._id)} />
+                    </td>
+                </tr>))}
+            </tbody>
+          
         </table>
-      </div>
+      </div>}
     </div>
   );
 }
