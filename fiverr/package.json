@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "postinstall": "prisma generate --no-engine"
+    
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^3.9.0",
